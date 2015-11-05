@@ -6,12 +6,12 @@ var MathFunctions = {
 
 
 
-var Point = function(x, y, radius, direction) {
+var Point = function(x, y, radius, direction, velocity) {
     this.x = x;
     this.y = y;
     this.radius = radius;
     this.direction = direction;
-    this.velocity = 15;
+    this.velocity = velocity;
 }
 
 var Network = function(canvas, numberOfPoints) {
@@ -23,6 +23,78 @@ var Network = function(canvas, numberOfPoints) {
     this.ctx = document.getElementById('myCanvas').getContext('2d');
     this.interval;
     this.points = [];
+    this.color = "#FFFFFF";
+    this.rainbow = false;
+    this.vmin = 15;
+    this.vmax = 60;
+    
+    this.randomizeDirections = function() {
+        for(var i=0; i<this.points.length; i++) {
+            //Random direction (up, left,..)
+            var rd = MathFunctions.random(0, 3);
+            var direction;
+            
+            switch(rd) {
+                case 0: //Left
+                    direction = {x: 0, y: MathFunctions.random(0, this.height)};
+                    break;
+                case 1: //Right
+                    direction = {x: this.width, y: MathFunctions.random(0, this.height)};
+                    break;
+                case 2: //Up
+                    direction = {x: MathFunctions.random(0, this.width), y: 0};
+                    break;
+                case 3:
+                    direction = {x: MathFunctions.random(0, this.width), y: this.height};
+                    break;
+            }
+            
+            this.points[i].direction = direction;
+        }
+    }
+    
+    this.setColor = function(color) {
+        this.color = color;
+    }
+    
+    this.randomizeColor = function() {
+        function randomHex() { //ToDo: use convert to hex
+            var r = MathFunctions.random(0, 15);
+            switch(r) {
+                case 10:
+                    r = 'A';
+                    break;
+                case 11:
+                    r = 'B';
+                    break;
+                case 12:
+                    r = 'C';
+                    break;
+                case 13:
+                    r = 'D';
+                    break;
+                case 14:
+                    r = 'E';
+                    break;
+                case 15:
+                    r = 'F';
+                    break;
+            }
+            return r;
+        }
+        
+        var hex = ['#'];
+        for(var i=0; i<6; i++) {
+            hex.push(randomHex());
+        }
+        this.setColor(hex.join(''));
+    }
+    
+    this.setVelocities = function(vmin, vmax) {
+        for(var i=0; i<this.points.length; i++) {
+            this.points[i].velocity = MathFunctions.random(vmin, vmax);
+        }
+    }
     
     this.draw = function() {
         var ctx = canvas.getContext('2d');
@@ -30,7 +102,7 @@ var Network = function(canvas, numberOfPoints) {
         
         //Points
         for(var i=0; i<this.points.length; i++) {
-            ctx.fillStyle = '#FFFFFF';
+            ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.points[i].x, this.points[i].y, this.points[i].radius, 0, Math.PI*2, true); 
             ctx.closePath();
@@ -40,11 +112,17 @@ var Network = function(canvas, numberOfPoints) {
         //Lines
         for(var i=0; i<this.points.length; i++) {
             if(i != this.points.length - 1) {
-                ctx.strokeStyle = '#FFFFFF';
+                ctx.strokeStyle = this.color;
                 ctx.beginPath();
                 ctx.moveTo(this.points[i].x, this.points[i].y);
                 ctx.lineTo(this.points[i+1].x, this.points[i+1].y);
                 ctx.stroke(); 
+            } else {
+                ctx.strokeStyle = this.color;
+                ctx.beginPath();
+                ctx.moveTo(this.points[i].x, this.points[i].y);
+                ctx.lineTo(this.points[0].x, this.points[0].y);
+                ctx.stroke();
             }
         }
     }
@@ -62,6 +140,13 @@ var Network = function(canvas, numberOfPoints) {
             this.points[i].x += this.dt * v_x;
             this.points[i].y += this.dt * v_y;
             
+            //Change directions
+            if(this.points[i].x <= (0+this.points[i].radius*2) || this.points[i].x >= (this.width - this.points[i].radius*2)
+                || this.points[i].y <= (0+this.points[i].radius*2) || this.points[i].y >= (this.height - this.points[i].radius*2)) {
+                this.randomizeDirections();
+                
+            }
+            
         }
     }
     
@@ -77,6 +162,9 @@ var Network = function(canvas, numberOfPoints) {
                 requestAnimationFrame(render);
                 self.update();
                 self.draw();
+                if(self.rainbow) {
+                    self.randomizeColor();
+                }
             }, 1000 / self.fps);
         }
         render(); //Start rendering
@@ -86,19 +174,23 @@ var Network = function(canvas, numberOfPoints) {
         clearInterval(this.interval);
     }
     
-    this.init = function() {
+    this.createPoints = function() {
         //Create points
         for(var i=0; i<numberOfPoints; i++) {
             this.points.push(new Point(
                 MathFunctions.random(0, this.width),
                 MathFunctions.random(0, this.height),
                 3,
-                {x: MathFunctions.random(0, this.width), y: MathFunctions.random(0, this.height)}
+                {x: 0, y: 0},
+                MathFunctions.random(this.vmin, this.vmax)
             ));
         }
-        
+    }
+    
+    this.init = function() {
+        this.createPoints();        
+        this.randomizeDirections();
         this.draw();
-            
         this.start(); //Start rendering
     }
 }
