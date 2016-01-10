@@ -18,12 +18,12 @@ var Network = function(canvas, numberOfPoints) {
     this.canvas = canvas;
     this.width = canvas.width;
     this.height = canvas.height;
-    this.fps = 30;
+    this.fps = 60;
     this.dt = 1 / this.fps;
     this.ctx = document.getElementById('myCanvas').getContext('2d');
     this.interval;
     this.points = [];
-    this.color = "#FFFFFF";
+    this.color = "#7f8c8d";
     this.rainbow = false;
     this.vmin = 15;
     this.vmax = 60;
@@ -180,7 +180,7 @@ var Network = function(canvas, numberOfPoints) {
             this.points.push(new Point(
                 MathFunctions.random(0, this.width),
                 MathFunctions.random(0, this.height),
-                3,
+                1,
                 {x: 0, y: 0},
                 MathFunctions.random(this.vmin, this.vmax)
             ));
@@ -200,9 +200,14 @@ var Network = function(canvas, numberOfPoints) {
 var canvas, network;
 window.onload = function() {
     canvas = document.getElementById('myCanvas');
-    network = new Network(canvas, 7);
+    network = new Network(canvas, 15);
     
     network.init();
     
+    canvas.addEventListener('click', function(e) {
+        for(var i=0; i<network.points.length; i++) {
+            network.points[i].direction = {x: e.clientX, y: e.clientY};
+        }    
+    });
     
 }
