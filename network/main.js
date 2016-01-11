@@ -13,6 +13,9 @@ var Point = function(x, y, radius, direction, velocity) {
     this.direction = direction;
     this.velocity = velocity;
 }
+Point.prototype.setVelocity = function(velocity) {
+    this.velocity = velocity;
+}
 
 var Network = function(canvas, numberOfPoints) {
     this.canvas = canvas;
@@ -144,6 +147,7 @@ var Network = function(canvas, numberOfPoints) {
             if(this.points[i].x <= (0+this.points[i].radius*2) || this.points[i].x >= (this.width - this.points[i].radius*2)
                 || this.points[i].y <= (0+this.points[i].radius*2) || this.points[i].y >= (this.height - this.points[i].radius*2)) {
                 this.randomizeDirections();
+                this.points[i].setVelocity(MathFunctions.random(this.vmin, this.vmax));
                 
             }
             
